@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tweakers.net Mark as read
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  Hide all news which has been read or you don't want to read
 // @author       Tomas van Rijsse
 // @match        tweakers.net/*
@@ -17,17 +17,17 @@ var json = localStorage.getItem('articles') || "{}",
 jQuery(function($){
 
     $('body').append('<style>'+
-        'tr.selected td { background-color:#EFEFEF;}'+
-        'tr.selected .title a, tr.inBetweenContent.selected .ankeiler {opacity:0.5}'+
-        'tr.hiddenForMe .title a, tr.inBetweenContent.hiddenForMe .ankeiler {opacity:0.3}'+
-        '</style>');
+                    '.headlineItem.selected { background-color: rgba(0,0,0,0.2); }'+
+                     '.headlineItem.selected article.headline a {opacity:0.5}'+
+                     '.headlineItem.hiddenForMe article.headline a {opacity:0.3}'+
+                     '</style>');
 
     markAsRead();
 
     if(document.location.pathname == '/'){
         var home = new Home($);
 
-        var target = document.getElementById('groupedContent');
+        var target = document.getElementsByClassName('headlines')[0];
 
         // create an observer instance
         var observer = new MutationObserver(function(mutations) {
@@ -58,57 +58,57 @@ var Home = function($){
 
     self.hideArticles();
 
-    $(".highlights tr").mousedown(function () {
+    $(".headlineItem").mousedown(function () {
         self.isMouseDown = true;
 
-        $('table').removeClass('activeSelection');
-        $(this).parents('table').addClass('activeSelection');
+        $('.headlines .activeSelection').removeClass('activeSelection');
+        $(this).parent().addClass('activeSelection');
 
-        $(".highlights tr").removeClass("selectionStart selected selectionEnd");
+        $(".headlineItem").removeClass("selectionStart selected selectionEnd");
         $(this).addClass("selectionStart selected");
         return false; // prevent text selection
     })
         .mouseenter(function () {
-            if (self.isMouseDown && $(this).parents('table').hasClass('activeSelection')) {
-                $(".highlights tr").removeClass('selectionEnd');
-                $(this).addClass("selectionEnd");
-                self.selectInBetween($);
-            }
-        })
+        if (self.isMouseDown && $(this).parent().hasClass('activeSelection')) {
+            $(".headlineItem").removeClass('selectionEnd');
+            $(this).addClass("selectionEnd");
+            self.selectInBetween($);
+        }
+    })
         .bind("selectstart", function () {
-            return false; // prevent text selection in IE
-        });
+        return false; // prevent text selection in IE
+    });
 
     $(document).mouseup(function () {
         self.isMouseDown = false;
-        $(".highlights tr").removeClass('selectionStart selectionEnd');
+        $(".headlineItem").removeClass('selectionStart selectionEnd');
     })
         .keyup(function(e) {
-            var code = (e.keyCode ? e.keyCode : e.which);
-            if (code==13 &&  $(".highlights tr.selected").length) {
-                e.preventDefault();
+        var code = (e.keyCode ? e.keyCode : e.which);
+        if (code==13 &&  $(".headlineItem.selected").length) {
+            e.preventDefault();
 
-                $(".highlights tr.selected").each(function(){
-                    var id = getLinkId($(this).find('.title a').prop('href'));
-                    if(id){
-                        articles[id] = true;
-                    }
-                }).removeClass('selected').addClass('hiddenForMe');
+            $(".headlineItem.selected").each(function(){
+                var id = getLinkId($(this).find('article.headline a').prop('href'));
+                if(id){
+                    articles[id] = true;
+                }
+            }).removeClass('selected').addClass('hiddenForMe');
 
-                localStorage.setItem('articles',JSON.stringify(articles));
-            }
+            localStorage.setItem('articles',JSON.stringify(articles));
+        }
 
-            if (code==27 && $(".highlights tr.selected").length) {
-                e.preventDefault();
-                $(".highlights tr.selected").removeClass('selected');
-            }
+        if (code==27 && $(".headlineItem.selected").length) {
+            e.preventDefault();
+            $(".headlineItem.selected").removeClass('selected');
+        }
 
-        });
+    });
 };
 Home.prototype = {
     hideArticles:function(){
         /* hide articles on load */
-        $('.highlights tr').each(function(){
+        $('.headlineItem').each(function(){
             var $tr = $(this),
                 id = getLinkId($tr.find('a').first().prop('href'));
 
@@ -121,19 +121,19 @@ Home.prototype = {
     },
     selectInBetween: function($){
 
-        var $table = $('table.activeSelection'),
-            $inBetweeners = $table.find('tr.selectionStart ~ tr')
-                .not('tr.selectionEnd ~ tr');
+        var $table = $('.headlines div.activeSelection'),
+            $inBetweeners = $table.find('.headlineItem.selectionStart ~ .headlineItem')
+            .not('.headlineItem.selectionEnd ~ .headlineItem');
 
         if($inBetweeners.length == 0){
-            $inBetweeners = $table.find('tr.selectionEnd ~ tr')
-                .not('tr.selectionStart ~ tr');
+            $inBetweeners = $table.find('.headlineItem.selectionEnd ~ .headlineItem')
+            .not('.headlineItem.selectionStart ~ .headlineItem');
         };
 
         $inBetweeners.addClass('selected');
-        $table.find('tr').not($inBetweeners).removeClass('selected');
+        $table.find('.headlineItem').not($inBetweeners).removeClass('selected');
 
-        $table.find('tr.selectionStart, tr.selectionEnd').addClass('selected');
+        $table.find('.headlineItem.selectionStart, .headlineItem.selectionEnd').addClass('selected');
 
     }
 };
