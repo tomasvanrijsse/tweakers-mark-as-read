@@ -61,15 +61,12 @@ var Home = function($){
     $(".headlineItem").mousedown(function () {
         self.isMouseDown = true;
 
-        $('.headlines .activeSelection').removeClass('activeSelection');
-        $(this).parent().addClass('activeSelection');
-
         $(".headlineItem").removeClass("selectionStart selected selectionEnd");
         $(this).addClass("selectionStart selected");
         return false; // prevent text selection
     })
         .mouseenter(function () {
-        if (self.isMouseDown && $(this).parent().hasClass('activeSelection')) {
+        if (self.isMouseDown) {
             $(".headlineItem").removeClass('selectionEnd');
             $(this).addClass("selectionEnd");
             self.selectInBetween($);
@@ -121,20 +118,28 @@ Home.prototype = {
     },
     selectInBetween: function($){
 
-        var $table = $('.headlines div.activeSelection'),
-            $inBetweeners = $table.find('.headlineItem.selectionStart ~ .headlineItem')
-            .not('.headlineItem.selectionEnd ~ .headlineItem');
+        var $headlines = $('.headlineItem'),
+            inBetweeners = [],
+            startFound = false,
+            revertedSelection = false;
 
-        if($inBetweeners.length == 0){
-            $inBetweeners = $table.find('.headlineItem.selectionEnd ~ .headlineItem')
-            .not('.headlineItem.selectionStart ~ .headlineItem');
-        };
+        $headlines.each(function() {
+            if( $(this).hasClass('selectionStart')) { startFound = true }
+            if( $(this).hasClass('selectionEnd') && !startFound ) { startFound = true; revertedSelection = true }
 
-        $inBetweeners.addClass('selected');
-        $table.find('.headlineItem').not($inBetweeners).removeClass('selected');
+            if(startFound) {
+                inBetweeners.push(this);
+            }
 
-        $table.find('.headlineItem.selectionStart, .headlineItem.selectionEnd').addClass('selected');
+            if(($(this).hasClass('selectionEnd') && !revertedSelection) ||
+               ($(this).hasClass('selectionStart') && revertedSelection))
+            {
+                return false
+            }
+        });
 
+        $(inBetweeners).addClass('selected');
+        $('.headlineItem').not($(inBetweeners)).removeClass('selected');
     }
 };
 
