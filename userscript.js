@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Tweakers.net Mark as read
+// @name         Tweakers.net Markeren als gelezen
 // @namespace    http://tampermonkey.net/
-// @version      0.5
-// @description  Hide all news which has been read or you don't want to read
+// @version      1.0
+// @description  Verberg al het nieuws op de homepage wat je al gelezen hebt of niet wilt lezen
 // @author       Tomas van Rijsse
 // @match        tweakers.net/*
 // @grant        none
